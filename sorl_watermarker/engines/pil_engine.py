@@ -5,7 +5,8 @@ from sorl_watermarker.engines.base import WatermarkEngineBase
 try:
     from PIL import Image, ImageEnhance
 except ImportError:
-    import Image, ImageEnhance
+    import Image
+    import ImageEnhance
 
 
 class Engine(WatermarkEngineBase, PILEngine):
@@ -26,21 +27,22 @@ class Engine(WatermarkEngineBase, PILEngine):
         if not size:
             mark_size = watermark.size
         else:
-            mark_size = tuple(self._get_new_watermark_size(size, watermark.size))
+            mark_size = tuple(self._get_new_watermark_size(
+                size, watermark.size))
             options = {'crop': 'center',
                        'upscale': mark_size > watermark.size}
             watermark = self.scale(watermark, mark_size, options)
             watermark = self.crop(watermark, mark_size, options)
-        layer = Image.new('RGBA', image.size, (0,0,0,0))
+        layer = Image.new('RGBA', image.size, (0, 0, 0, 0))
         if position_str == 'tile':
             for x_pos in range(0, image.size[0], watermark.size[0]):
-                for y_pos in range (0, image.size[1], watermark.size[1]):
+                for y_pos in range(0, image.size[1], watermark.size[1]):
                     layer.paste(watermark, (x_pos, y_pos))
         else:
-            position = self._define_watermark_position(position_str, image.size, mark_size)
+            position = self._define_watermark_position(
+                position_str, image.size, mark_size)
             layer.paste(watermark, position)
         return Image.composite(layer, image, layer)
-
 
     def _reduce_opacity(self, image, opacity):
         if image.mode != 'RGBA':
@@ -52,3 +54,5 @@ class Engine(WatermarkEngineBase, PILEngine):
         image.putalpha(alpha)
         return image
 
+    def get_image(self, source):
+        return Image.open(source)  # use Pillow's Image.open
